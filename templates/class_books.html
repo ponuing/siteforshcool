@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Книги для {{ class_number }}-го класса</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .search-container {
+            margin: 20px 0;
+        }
+        .search-container input {
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s ease;
+        }
+        .search-container input:focus {
+            outline: none;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        .books-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            width: 90%;
+            margin: 0 auto;
+        }
+        @media (max-width: 768px) {
+            .books-container {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/">Школьный проект</a>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Coat_of_Arms_of_Omsk_Oblast.svg" alt="Логотип школы" draggable="false" class="logo">
+    </div>
+    <h1>Книги для {{ class_number }}-го класса</h1>
+    <div class="subtitle">Найдите нужную книгу</div>
+    <div class="search-container">
+        <input type="text" id="search" placeholder="Поиск книг..." onkeyup="searchBooks()">
+    </div>
+    <div class="books-container" id="books-container">
+        {% for book in books %}
+            <div class="card book" data-title="{{ book.title | lower }}">
+                <a href="/book/{{ book.id }}">{{ book.title }}</a>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        const allBooks = Array.from(document.querySelectorAll('.book')).map(book => ({
+            element: book,
+            title: book.getAttribute('data-title')
+        }));
+
+        function searchBooks() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const container = document.getElementById('books-container');
+
+            allBooks.forEach(book => {
+                if (book.title.includes(query)) {
+                    book.element.style.display = 'block';
+                } else {
+                    book.element.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

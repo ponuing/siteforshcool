@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Электронная библиотека</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .folders-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            width: 90%;
+            margin: 0 auto;
+        }
+        @media (max-width: 768px) {
+            .folders-container {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/">Школьный проект</a>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Coat_of_Arms_of_Omsk_Oblast.svg" alt="Логотип" draggable="false" class="logo">
+    </div>
+    <h1>Электронная библиотека</h1>
+    <div class="subtitle">Выберите класс, чтобы посмотреть доступные книги</div>
+    <div class="folders-container" id="folders-container">
+        {% for class in classes %}
+            <div class="card folder">
+                <a href="/class/{{ class }}">{{ class }}-й класс</a>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

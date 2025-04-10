@@ -1,0 +1,304 @@
+/* Общие стили для всех страниц */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    /* Добавляем фоновое изображение */
+    background: url('/static/background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    /* Добавляем полупрозрачный слой поверх изображения */
+    position: relative;
+}
+
+/* Создаем полупрозрачный слой через псевдоэлемент ::before */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(175, 175, 175, 0.2); /* Увеличиваем затемнение с 0.1 до 0.2 */
+    z-index: -1; /* Помещаем слой позади контента */
+    backdrop-filter: blur(2px) saturate(0); /* Убираем brightness, оставляем blur и saturate */
+}
+
+
+h1 {
+    color: #2c3e50;
+    font-size: 48px;
+    font-weight: 700;
+    margin: 20px 0 10px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    /* Подложка */
+    background: rgba(255, 255, 255, 0.9); /* Полупрозрачный белый фон */
+    padding: 10px 20px;
+    border-radius: 10px;
+    display: inline-block; /* Чтобы подложка соответствовала ширине текста */
+    /* Тень под подложкой */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.subtitle {
+    color: #7f8c8d;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 40px;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.05);
+    /* Подложка */
+    background: rgba(255, 255, 255, 0.9); /* Полупрозрачный белый фон */
+    padding: 5px 15px;
+    border-radius: 8px;
+    display: inline-block; /* Чтобы подложка соответствовала ширине текста */
+    /* Тень под подложкой */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.95); /* Полупрозрачный белый фон */
+    /* Тень */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    z-index: 1; /* Убедимся, что хедер выше фонового слоя */
+}
+
+.header a {
+    color: #34495e;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+}
+
+.container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.sad-emoji {
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: #7f8c8d;
+}
+
+/* Стили для карточек (папки и книги) */
+.card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    background-color: #f0f0f0;
+}
+
+.card:active {
+    transform: scale(0.95);
+    background-color: #e0e0e0;
+}
+
+.card a {
+    text-decoration: none;
+    color: #34495e;
+    font-size: 20px;
+    font-weight: 600;
+    display: block;
+    width: 100%;
+    height: 100%;
+    line-height: 1.5;
+}
+
+/* Стили для кнопок */
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #34495e;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    line-height: 1;
+    box-sizing: border-box;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.button:hover {
+    background-color: #2c3e50;
+    transform: translateY(-2px);
+}
+
+.button:active {
+    transform: scale(0.95);
+    background-color: #1f2a3c;
+}
+
+/* Стили для навигационных кнопок и текста в reader.html */
+.nav-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 10px auto 5px auto;
+}
+
+.nav-button {
+    background-color: #34495e;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    line-height: 1;
+    box-sizing: border-box;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.nav-button:hover {
+    transform: scale(1.05);
+    background-color: #2c3e50;
+}
+
+.nav-button:disabled {
+    background-color: #7f8c8d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.nav-text {
+    background-color: #34495e;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    line-height: 1;
+    box-sizing: border-box;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Стили для поля ввода и кнопки "Перейти" */
+.page-input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 5px auto 0 auto;
+}
+
+.page-input {
+    padding: 10px;
+    width: 120px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease;
+    line-height: 1;
+    box-sizing: border-box;
+    text-align: center;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    white-space: nowrap;
+}
+
+.page-input::-webkit-inner-spin-button,
+.page-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.page-input:focus {
+    outline: none;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для сообщения об ошибке */
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin: 5px 0 10px 0;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.3s ease;
+}
+
+.error-message.active {
+    height: 20px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .header {
+        padding: 10px;
+    }
+
+    .logo {
+        width: 30px;
+        height: 30px;
+    }
+
+    h1 {
+        font-size: 36px;
+    }
+
+    .subtitle {
+        font-size: 16px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .card a {
+        font-size: 18px;
+    }
+
+    .nav-container {
+        flex-wrap: wrap;
+    }
+
+    .page-input-container {
+        flex-wrap: wrap;
+    }
+
+    .button, .nav-button, .nav-text {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+}

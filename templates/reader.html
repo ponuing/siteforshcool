@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ book_title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            padding-bottom: 20px;
+            overflow: hidden;
+        }
+        #frame-container {
+            position: relative;
+            margin: 5px auto 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 90vw;
+            border: none;
+        }
+        #page-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+            transition: transform 0.5s ease;
+            gap: 15px;
+            font-size: 0;
+        }
+        .page-wrapper {
+            position: relative;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: inline-block;
+        }
+        .page-image {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            user-select: none;
+            margin: 0;
+            padding: 0;
+            display: block;
+            pointer-events: none;
+            border-radius: 10px;
+        }
+        @keyframes slideRight {
+            from {
+                transform: translateX(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideLeft {
+            from {
+                transform: translateX(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .slide-right {
+            animation: slideRight 0.5s ease forwards;
+        }
+        .slide-left {
+            animation: slideLeft 0.5s ease forwards;
+        }
+        @media (max-width: 768px) {
+            #right-page-wrapper {
+                display: none;
+            }
+            #page-container {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/">Школьный проект</a>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Coat_of_Arms_of_Omsk_Oblast.svg" alt="Логотип" draggable="false" class="logo">
+    </div>
+    <h1>{{ book_title }}</h1>
+    <div class="nav-container">
+        <button id="prev-page" class="nav-button" onclick="changePage(-1)">Предыдущие страницы</button>
+        <span id="page-number" class="nav-text">Страницы 0-1</span>
+        <button id="next-page" class="nav-button" onclick="changePage(1)">Следующие страницы</button>
+    </div>
+    <div class="page-input-container">
+        <input type="number" id="page-input" class="page-input" placeholder="Номер страницы" min="0" max="{{ total_pages - 1 }}">
+        <button class="button" onclick="goToPage()">Перейти</button>
+    </div>
+    <div id="error-message" class="error-message"></div>
+    <div id="frame-container">
+        <div id="page-container">
+            <div class="page-wrapper" id="left-page-wrapper">
+                <img id="left-page" class="page-image" src="" alt="Левая страница" draggable="false">
+            </div>
+            <div class="page-wrapper" id="right-page-wrapper">
+                <img id="right-page" class="page-image" src="" alt="Правая страница" draggable="false">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        const bookId = {{ book_id | tojson | safe }};
+        const totalPages = {{ total_pages | tojson | safe }};
+        let leftPageLoaded = false, rightPageLoaded = false;
+        const bottomPadding = 40;
+        let lastDirection = 0;
+
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        function getAvailableViewport() {
+            const navigation = document.querySelector('.nav-container');
+            const pageInputContainer = document.querySelector('.page-input-container');
+            const errorMessage = document.getElementById('error-message');
+            const header = document.querySelector('h1').getBoundingClientRect();
+            const navigationRect = navigation.getBoundingClientRect();
+            const pageInputRect = pageInputContainer.getBoundingClientRect();
+            const errorRect = errorMessage.getBoundingClientRect();
+            const frameContainer = document.getElementById('frame-container');
+            const frameMarginBottom = parseInt(window.getComputedStyle(frameContainer).marginBottom);
+
+            const availableHeight = window.innerHeight - header.bottom - navigationRect.height - pageInputRect.height - errorRect.height - frameMarginBottom - bottomPadding;
+            const availableWidth = window.innerWidth * 0.9;
+            return { width: availableWidth, height: availableHeight };
+        }
+
+        function shouldShowSinglePage() {
+            const isMobile = window.innerWidth <= 768;
+            const isPortrait = window.innerHeight > window.innerWidth;
+            return isMobile && isPortrait;
+        }
+
+        const fitImageToContainer = debounce(() => {
+            const frameContainer = document.getElementById('frame-container');
+            const container = document.getElementById('page-container');
+            const leftPage = document.getElementById('left-page');
+            const rightPage = document.getElementById('right-page');
+            const leftWrapper = document.getElementById('left-page-wrapper');
+            const rightWrapper = document.getElementById('right-page-wrapper');
+
+            console.log('fitImageToContainer called');
+            console.log('Left page loaded:', leftPageLoaded);
+            console.log('Right page loaded:', rightPageLoaded);
+            console.log('Left page natural width:', leftPage.naturalWidth);
+
+            if (!leftPageLoaded || (!rightPageLoaded && !shouldShowSinglePage()) || !leftPage.naturalWidth) {
+                console.log('Not all pages loaded or no natural width, skipping fitImageToContainer');
+                return;
+            }
+
+            const viewport = getAvailableViewport();
+            let availableWidth = viewport.width;
+            let availableHeight = viewport.height;
+
+            const showSinglePage = shouldShowSinglePage();
+
+            let leftWidth = leftPage.naturalWidth;
+            let leftHeight = leftPage.naturalHeight;
+            let rightWidth = showSinglePage ? 0 : rightPage.naturalWidth;
+            let rightHeight = showSinglePage ? 0 : rightPage.naturalHeight;
+
+            if (!showSinglePage && leftHeight !== rightHeight) {
+                const largerHeight = Math.max(leftHeight, rightHeight);
+                const smallerHeight = Math.min(leftHeight, rightHeight);
+                const heightDifferencePercent = ((largerHeight - smallerHeight) / largerHeight) * 100;
+
+                if (heightDifferencePercent < 10) {
+                    if (leftHeight > rightHeight) {
+                        leftHeight = rightHeight;
+                    } else {
+                        rightHeight = leftHeight;
+                    }
+                }
+            }
+
+            const totalWidth = leftWidth + rightWidth + (showSinglePage ? 0 : 15);
+            const maxHeight = Math.max(leftHeight, rightHeight || 0);
+
+            const scaleX = availableWidth / totalWidth;
+            const scaleY = availableHeight / maxHeight;
+            const scale = Math.min(scaleX, scaleY, 0.85);
+
+            leftPage.style.width = `${leftWidth * scale}px`;
+            leftPage.style.height = `${leftHeight * scale}px`;
+            leftWrapper.style.width = `${leftWidth * scale}px`;
+            leftWrapper.style.height = `${maxHeight * scale}px`;
+
+            if (!showSinglePage) {
+                rightPage.style.width = `${rightWidth * scale}px`;
+                rightPage.style.height = `${rightHeight * scale}px`;
+                rightWrapper.style.width = `${rightWidth * scale}px`;
+                rightWrapper.style.height = `${maxHeight * scale}px`;
+            } else {
+                rightWrapper.style.width = '0px';
+                rightWrapper.style.height = '0px';
+            }
+
+            const scaledWidth = totalWidth * scale;
+            const scaledHeight = maxHeight * scale;
+            frameContainer.style.width = `${scaledWidth}px`;
+            frameContainer.style.height = `${scaledHeight}px`;
+            frameContainer.style.maxWidth = `${availableWidth}px`;
+            frameContainer.style.maxHeight = `${availableHeight}px`;
+
+            container.style.width = `${scaledWidth}px`;
+            container.style.height = `${scaledHeight}px`;
+
+            console.log('Scaled width:', scaledWidth);
+            console.log('Scaled height:', scaledHeight);
+            console.log('Available width:', availableWidth);
+            console.log('Available height:', availableHeight);
+            console.log('Frame container dimensions:', frameContainer.style.width, frameContainer.style.height);
+        }, 100);
+
+        function loadPage(pageNum, imgElementId) {
+            if (pageNum >= totalPages || pageNum < 0) {
+                document.getElementById(imgElementId).src = '';
+                if (imgElementId === 'left-page') leftPageLoaded = true;
+                if (imgElementId === 'right-page') rightPageLoaded = true;
+                fitImageToContainer();
+                return;
+            }
+
+            const imgElement = document.getElementById(imgElementId);
+            const imageUrl = `/static/pages/book_${bookId}_page_${pageNum}.jpg`;  // Прямой URL
+            console.log(`Loading page ${pageNum} for ${imgElementId}: ${imageUrl}`);
+            imgElement.src = imageUrl;
+
+            imgElement.onerror = () => {
+                console.error('Ошибка загрузки изображения:', imageUrl);
+                if (imgElementId === 'left-page') leftPageLoaded = true;
+                if (imgElementId === 'right-page') rightPageLoaded = true;
+                fitImageToContainer();
+            };
+            imgElement.onload = () => {
+                if (imgElementId === 'left-page') leftPageLoaded = true;
+                if (imgElementId === 'right-page') rightPageLoaded = true;
+                console.log(`Page ${pageNum} loaded for ${imgElementId}`);
+                fitImageToContainer();
+            };
+        }
+
+        function loadSpread(startPage, direction) {
+            const showSinglePage = shouldShowSinglePage();
+
+            leftPageLoaded = false;
+            rightPageLoaded = false;
+
+            if (showSinglePage) {
+                if (startPage < 0) startPage = 0;
+                if (startPage >= totalPages) startPage = totalPages - 1;
+            } else {
+                startPage = Math.floor(startPage / 2) * 2;
+                if (startPage < 0) startPage = 0;
+                if (startPage >= totalPages) startPage = Math.floor((totalPages - 1) / 2) * 2;
+            }
+
+            currentPage = startPage;
+
+            if (showSinglePage) {
+                loadPage(currentPage, 'left-page');
+                document.getElementById('right-page').src = '';
+                rightPageLoaded = true;
+                document.getElementById('page-number').textContent = `Страница ${currentPage}`;
+            } else {
+                loadPage(currentPage, 'left-page');
+                loadPage(currentPage + 1, 'right-page');
+                document.getElementById('page-number').textContent = `Страницы ${currentPage}-${currentPage + 1}`;
+            }
+
+            document.getElementById('prev-page').disabled = (currentPage === 0);
+            document.getElementById('next-page').disabled = (currentPage + (showSinglePage ? 1 : 2) >= totalPages);
+
+            const pageContainer = document.getElementById('page-container');
+            pageContainer.classList.remove('slide-right', 'slide-left');
+            if (direction !== 0) {
+                if (direction > 0) {
+                    pageContainer.classList.add('slide-left');
+                } else {
+                    pageContainer.classList.add('slide-right');
+                }
+            }
+        }
+
+        function changePage(direction) {
+            const showSinglePage = shouldShowSinglePage();
+            const step = showSinglePage ? direction : direction * 2;
+            const newPage = currentPage + step;
+            lastDirection = direction;
+            loadSpread(newPage, direction);
+        }
+
+        function goToPage() {
+            const pageInput = document.getElementById('page-input');
+            const errorMessage = document.getElementById('error-message');
+            let pageNum = parseInt(pageInput.value, 10);
+
+            errorMessage.textContent = '';
+            errorMessage.classList.remove('active');
+
+            if (isNaN(pageNum) || pageNum < 0 || pageNum >= totalPages) {
+                errorMessage.textContent = `Пожалуйста, введите номер страницы от 0 до ${totalPages - 1}`;
+                errorMessage.classList.add('active');
+                pageInput.value = '';
+                return;
+            }
+
+            const showSinglePage = shouldShowSinglePage();
+            if (!showSinglePage) {
+                pageNum = Math.floor(pageNum / 2) * 2;
+            }
+
+            lastDirection = pageNum > currentPage ? 1 : -1;
+            loadSpread(pageNum, lastDirection);
+            pageInput.value = '';
+        }
+
+        window.addEventListener('resize', () => {
+            fitImageToContainer();
+            loadSpread(currentPage, lastDirection);
+        });
+
+        window.addEventListener('orientationchange', () => {
+            fitImageToContainer();
+            loadSpread(currentPage, lastDirection);
+        });
+
+        window.onload = () => {
+            console.log('Window loaded, loading initial spread');
+            loadSpread(0, 0);
+        };
+    </script>
+</body>
+</html>
